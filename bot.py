@@ -26,13 +26,14 @@ START_PIXEL_COLOR = 0x53393a
 START_PIXEL_COLOR_RIGHT = 0x352016
 
 class Colors:
-    YELLOW = (254, 245, 35)
-    GRAY = (224, 224, 224)
-    GREEN = (16, 164, 33)
-    PURPLE = (239, 15, 239)
-    RED = (249,26,54)
-    ORANGE = (230, 101, 33)
-    BLUE = (16, 139, 254)
+    YELLOW = (254, 245, 35, "A")
+    GRAY = (245, 245, 245, "G")
+    GREEN = (38,187,67, "V")
+    PURPLE = (235, 13, 235, "P")
+    RED = (247,26,54, "R")
+    ORANGE = (229,149,62, "N")
+    BLUE = (13,116,235, "C")
+    MONEY = (203,165,40, "M")
     OTHER = [0]
 
 COLORS = [Colors.YELLOW, Colors.GRAY, Colors.GREEN, Colors.PURPLE, Colors.RED, Colors.ORANGE, Colors.BLUE]
@@ -59,7 +60,14 @@ def scan_board(board, x, y):
     screen = autopy.bitmap.capture_screen()
     for i in range (0, 8):
         for j in range (0, 8):
-            board[i][j] = autopy.color.hex_to_rgb(screen.get_color(x0 + (j * CELL_WIDTH), y0 + (i * CELL_WIDTH)))
+            r = g = b = 0
+            for k in range (-2, 3):
+                values = autopy.color.hex_to_rgb(screen.get_color(x0 + (j * CELL_WIDTH) + k, y0 + (i * CELL_WIDTH) + k))
+                r += values[0]
+                g += values[1]
+                b += values[2]
+            board[i][j] = get_color2((r//5, g//5, b//5 ))
+             
 
 def test_movement(x, y):
     x0 = x + CELL_WIDTH/2
@@ -82,6 +90,7 @@ def make_move(board, x, y):
                 if (test_swap(board, i, j, k)):
                     results.append( (i, j, k))
 
+    
     if (len(results) > 0):
         s = random.choice(results)
         i = s[0]
@@ -184,6 +193,9 @@ def get_color2(color):
             minDist = distance
             minColor = i
 
+    if (minColor == Colors.MONEY):
+        minColor = Colors.YELLOW
+
     return minColor
 
 # Try to find the leftmost top pixel from the board
@@ -192,7 +204,7 @@ def get_color2(color):
 def calibrate_vertically(x, y):
     screen = autopy.bitmap.capture_screen()
     for i in range (0, 100):
-        for j in range (-5, 10):
+        for j in range (-10, 10):
             if (hex(screen.get_color(x + j, y - i)) == hex(START_PIXEL_COLOR)):
                 if (hex(screen.get_color(x + j + 1, y - i)) == hex(START_PIXEL_COLOR_RIGHT)):
                     return (x + j + 1, y - i - 1)
@@ -214,8 +226,7 @@ def main():
         scan_board(board, x, y)
         make_move(board, x, y)
         time.sleep(SLEEP_TIME)
-
-
+    
 
 # This is the standar boilerplate that calls the main() function
 if __name__ == '__main__':
